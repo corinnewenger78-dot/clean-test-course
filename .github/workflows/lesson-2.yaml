@@ -24,9 +24,9 @@ jobs:
   unit_test:
     runs-on: ubuntu-latest
     steps:
-      - nme: Checkout
+      - name: Checkout
         uses: actions/checkout@v7.0.1
-      - uses: actions/setup-pthon@v7
+      - uses: actions/setup-python@v7.0
         with:
           python-version: '3.10'
       - name: Install tet environment
