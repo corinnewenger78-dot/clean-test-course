@@ -1,38 +1,23 @@
+import pytest
+from types import SimpleNamespace
 from api.controllers import Delivery
-from django_mock_queries.query import MockSet, MockModel
 
-def test_LotsOfItems():
-  #Arrange
-  order = MockSet()
-  order.add(MockModel(quantity=5))
-  order.add(MockModel(quantity=5))
-  order.add(MockModel(quantity=5))
-  delivery_distance = 6
-  #Act
-  cost = Delivery.calculate(order,delivery_distance)
-  #Assert
-  assert cost == 7.5
 
-def test_MiddleOfTheRoadItems():
-  #Arrange
-  order = MockSet()
-  order.add(MockModel(quantity=2))
-  order.add(MockModel(quantity=2))
-  order.add(MockModel(quantity=2))
-  delivery_distance = 4
-  #Act
-  cost = Delivery.calculate(order,delivery_distance)
-  #Assert
-  assert cost == 5
-
-def test_LittleItems():
-  #Arrange
-  order = MockSet()
-  order.add(MockModel(quantity=3))
-  order.add(MockModel(quantity=1))
-  delivery_distance = 2
-  #Act
-  cost = Delivery.calculate(order, delivery_distance)
-  #Assert
-  assert cost == 2.50
- 
+@pytest.mark.parametrize(
+    "quantities,distance,expected",
+    [
+        ([], 0, 3.50),          # Leere Bestellung
+        ([3, 1], 2, 3.50),     # Mindestgebühr
+        ([5], 3, 3.50),        # Grenze: 5 Artikel
+        ([6], 3, 3.50),        # Grenze: 3 Entfernungseinheiten
+        ([6], 4, 5.00),        # Mittlere Liefergebühr
+        ([10], 6, 5.00),       # Grenze: 10 Artikel
+        ([11], 5, 5.00),       # Grenze: 5 Entfernungseinheiten
+        ([11], 6, 7.50),       # Höchste Liefergebühr
+        ([5, 5, 5], 6, 7.50),  # Mengen über mehrere Positionen
+    ],
+)
+def test_delivery_fee(quantities, distance, expected):
+    # Einfache Testobjekte ersetzen unnötige Datenbank-Mocks.
+    order = [SimpleNamespace(quantity=quantity) for quantity in quantities]
+    assert Delivery.calculate(order, distance) == expected
